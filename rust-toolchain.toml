@@ -1,0 +1,14 @@
+# Use whatever stable a contributor has. MSRV (1.95, current stable) is
+# asserted via the `rust-version` field in Cargo.toml — pinning a specific
+# stable channel here would force re-downloads on every dev box without
+# adding reproducibility guarantees (CI handles reproducibility).
+#
+# `targets` makes the cross-compile surface self-describing: anyone
+# cloning this repo (CI or human) materialises the aarch64-unknown-linux-gnu
+# std lib on first `cargo` invocation. The crate name is the contract:
+# `furcate-pi-hat` only targets aarch64 Linux Pi-class hardware.
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+targets = ["aarch64-unknown-linux-gnu"]
+profile = "minimal"

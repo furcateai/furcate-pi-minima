@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: Apache-2.0
+name: ci
+
+# Native ARM64 CI. `furcate-pi-minima` is a Pi-class operator wrapper —
+# it shells out to `systemctl`, writes systemd units to `/etc`, and
+# expects the Linux process/signal/FS surface that the bin module
+# is gated on (`cfg(target_os = "linux")`). The build refuses on
+# non-Linux targets, so this workflow runs on `ubuntu-24.04-arm`,
+# matching the Raspberry Pi target.
+#
+# The optional `minima-attest` feature pulls in the upstream
+# `minima-attest` crate via git+tag. CI exercises both the default
+# build (no feature) and the `minima-attest` feature path so a break
+# in either is caught in isolation.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Dwarnings
+
+jobs:
+  fmt:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: rustfmt }
+      - run: cargo fmt -- --check
+
+  clippy-default:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-targets -- -Dwarnings
+
+  clippy-minima-attest:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-targets --features minima-attest -- -Dwarnings
+
+  test:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --features minima-attest
+
+  # Confirms the `furcate-minima` binary still links — catches breakage
+  # in the clap surface or the ops module without needing a runtime
+  # systemd environment.
+  build-bin:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --bin furcate-minima

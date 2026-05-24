@@ -1,0 +1,20 @@
+furcate-pi-minima
+Copyright 2026 Furcate Contributors
+
+This product includes software developed at Furcate (https://furcate.xyz).
+
+This crate is a Pi-class operator wrapper that supervises an unmodified
+upstream Minima full node. It is not a fork or reimplementation of
+Minima; it fetches and runs the upstream `minima.jar` published at
+https://github.com/minima-global/Minima under Apache-2.0.
+
+This product depends on the following third-party software:
+  - Minima (https://github.com/minima-global/Minima) — Apache-2.0
+    (downloaded at runtime as `minima.jar`; not redistributed in source form)
+  - reqwest (https://github.com/seanmonstar/reqwest) — MIT/Apache-2.0
+  - tokio (https://github.com/tokio-rs/tokio) — MIT
+  - clap (https://github.com/clap-rs/clap) — MIT/Apache-2.0
+  - rustls (https://github.com/rustls/rustls) — MIT/Apache-2.0/ISC
+  - secrecy (https://github.com/iqlusioninc/crates) — MIT/Apache-2.0
+  - minima-attest (https://github.com/furcateai/minima-attest) — Apache-2.0
+    (loaded only when the `minima-attest` feature is enabled)

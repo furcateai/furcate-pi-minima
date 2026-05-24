@@ -1,0 +1,9 @@
+/target
+**/*.rs.bk
+Cargo.lock.user
+
+# Local operator artefacts that should never be committed.
+# `furcate-minima init` materialises a chain dir + secrets at FURCATE_MINIMA_ROOT.
+/var/
+/etc/furcate-minima/
+*.jar

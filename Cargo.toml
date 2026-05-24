@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# `furcate-pi-minima` is a Pi-class operator wrapper that supervises an
+# upstream Minima full node tuned for Furcate attestation workloads. It
+# runs the Apache-2.0 `minima.jar` unmodified — this crate is not a fork
+# or reimplementation.
+#
+# Target gate: aarch64 Linux. This is a single-platform crate per the
+# Furcate platform-named-crate rule: the bin + ops module are gated on
+# `target_os = "linux"`; the build refuses on other targets.
+
+[package]
+name = "furcate-pi-minima"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "Apache-2.0"
+authors = ["Furcate Contributors"]
+homepage = "https://github.com/furcateai/furcate-pi-minima"
+repository = "https://github.com/furcateai/furcate-pi-minima"
+readme = "README.md"
+description = "Pi-class operator wrapper that supervises an upstream Minima full node tuned for Furcate attestation workloads."
+keywords = ["raspberry-pi", "minima", "blockchain", "attestation", "edge"]
+categories = ["command-line-utilities", "embedded"]
+
+[[bin]]
+name = "furcate-minima"
+path = "src/bin/furcate-minima.rs"
+
+[dependencies]
+# CLI surface — eight subcommands earn clap.
+clap = { version = "4", features = ["derive", "env"] }
+
+# HTTP — jar fetch from GitHub releases + local Minima RPC calls.
+# rustls (aws-lc-rs) matches the rest of the Furcate bundle — no native-tls.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+
+# URL — Minima's `MinimaConfig::rpc_url` is `url::Url`.
+url = "2"
+
+# Streaming download chunks from the jar fetcher.
+futures = "0.3"
+
+# Hashing — verify the downloaded jar against the in-crate SHA256 manifest.
+sha2 = "0.10"
+hex = "0.4"
+
+# Cryptographic randomness for `-dbpassword` / `-rpcpassword` generation.
+# `getrandom` directly is enough; no `rand` ceremony needed for a 32-byte secret.
+getrandom = "0.2"
+
+# In-memory secret wrapping — `dbpassword` / `rpcpassword` should not be
+# `Debug`-printable or land in panic messages.
+secrecy = { version = "0.8", features = ["serde"] }
+
+# Config + serde glue.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Async runtime — multi-threaded because the jar fetcher is I/O-bound and we
+# want the RPC client + signal handler responsive in parallel.
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros", "fs", "process", "signal", "time", "sync"] }
+
+# Errors / tracing.
+thiserror = "1"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt", "smallvec", "parking_lot"] }
+
+# Operator UX — download progress without log-line spam.
+indicatif = "0.17"
+
+# Optional: emit a `LocalMinimaNode::attester()` shortcut wired into
+# minima-attest. Off by default so the crate is usable without it.
+minima-attest = { git = "https://github.com/furcateai/minima-attest", tag = "v0.1.0", features = ["furcate"], optional = true }
+
+[features]
+default = []
+# Compile a `LocalMinimaNode::attester()` convenience constructor that
+# returns a fully-wired `minima_attest::MinimaAttester`. Pulls the
+# `minima-attest` crate into the dep tree; downstream binaries that already
+# depend on `minima-attest` should enable this.
+minima-attest = ["dep:minima-attest"]
+
+[dev-dependencies]
+tempfile = "3.27"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
