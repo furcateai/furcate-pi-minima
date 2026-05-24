@@ -7,3 +7,8 @@ Cargo.lock.user
 /var/
 /etc/furcate-minima/
 *.jar
+
+# Claude Code — no Claude state in public repos
+.claude/
+CLAUDE.md
+CLAUDE.local.md
