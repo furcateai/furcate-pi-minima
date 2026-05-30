@@ -262,6 +262,13 @@ pub async fn status(paths: &Paths) -> Result<NodeHealth, Error> {
     };
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
+        // Minima's RPC HTTP parser is case-sensitive on header names and
+        // only accepts `Authorization` (Title-Case). reqwest/hyper write
+        // header names lowercased by default (`authorization`), which the
+        // node silently rejects with 401. This flag makes hyper emit
+        // Title-Case header names so Basic auth is recognised. Verified
+        // against a live Minima 1.0.45 node.
+        .http1_title_case_headers()
         .build()?;
 
     match rpc::status(&node.rpc_url, &node.rpc_password, &client).await {
